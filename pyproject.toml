@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aos-patcher"
+name = "aos-lib"
 requires-python = ">= 3.12"
 dependencies = [
     "construct>=2.10.70"
@@ -21,7 +21,7 @@ dev = [
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-version_file = "src/aos_patcher/version.py"
+version_file = "src/aos_lib/version.py"
 
 [tool.ruff]
 lint.select = ["F", "E", "W", "I", "UP"]
