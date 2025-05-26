@@ -25,3 +25,4 @@ version_file = "src/aos_lib/version.py"
 
 [tool.ruff]
 lint.select = ["F", "E", "W", "I", "UP"]
+line-length = 100
