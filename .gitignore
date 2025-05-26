@@ -2,3 +2,4 @@ version.py
 *.egg-info
 venv
 __pycache__
+.ruff_cache
