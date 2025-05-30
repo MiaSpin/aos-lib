@@ -9,10 +9,11 @@ from construct.core import (
     Int32ul,
     Padding,
     Peek,
-    Pointer,
     StopIf,
     Struct,
 )
+
+from aos_lib.structs.common_types import AosPointer
 
 EntityType = Enum(
     Int8ul,
@@ -55,9 +56,7 @@ Room = Struct(
     "_gfx_page_offset" / Int32ul,
     "_palette_page_list" / Int32ul,
 
-    "_entity_list_offset" / Int32ul,
-    "entity_list" / Pointer(
-        this._entity_list_offset - 0x08000000,
+    "entity_list" / AosPointer(
         GreedyRange(
             FocusedSeq(
                 "entity",
@@ -68,9 +67,7 @@ Room = Struct(
         ),
     ),
 
-    "_door_list_offset" / Int32ul,
-    "door_list" / Pointer(
-        this._door_list_offset - 0x08000000,
+    "door_list" / AosPointer(
         GreedyRange(
             FocusedSeq(
                 "door",

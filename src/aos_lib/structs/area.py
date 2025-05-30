@@ -1,7 +1,8 @@
 
-from construct.core import Construct, Pointer, stream_read, stream_seek, stream_tell
+from construct.core import Construct, stream_read, stream_seek, stream_tell
 from construct.lib import ListContainer
 
+from aos_lib.structs.common_types import AosPointer
 from aos_lib.structs.room import Room
 
 
@@ -14,8 +15,7 @@ class Area(Construct):
 
         room_list = []
         while stream_tell(stream, path) != room_list_end_offset:
-            room_offset = int.from_bytes(stream_read(stream, 4, path), 'little') - 0x08000000
-            room = Pointer(room_offset, Room)._parsereport(stream, context, path)
+            room = AosPointer(Room)._parsereport(stream, context, path)
             room_list.append(room)
 
         return ListContainer(room_list)
