@@ -2,7 +2,7 @@ from io import BytesIO
 
 
 class RomStream(BytesIO):
-    def read_int(self, size: int = -1) -> int:
+    def read_int(self, size: int = 1) -> int:
         return int.from_bytes(self.read(size), 'little')
 
     def read_offset(self) -> int:
