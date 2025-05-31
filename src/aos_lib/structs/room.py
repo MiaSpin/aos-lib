@@ -1,22 +1,9 @@
-from construct import this
-from construct.core import (
-    Const,
-    Enum,
-    FocusedSeq,
-    GreedyRange,
-    Int8ul,
-    Int16ul,
-    Int32ul,
-    Padding,
-    Peek,
-    StopIf,
-    Struct,
-)
+from enum import Enum
 
-from aos_lib.structs.common_types import AosPointer
+from aos_lib.structs.rom_object import RomObject
 
-EntityType = Enum(
-    Int8ul,
+
+class EntityType(Enum):
     NOTHING = 0,
     ENEMY = 1,
     SPECIAL_OBJECT = 2,
@@ -24,61 +11,56 @@ EntityType = Enum(
     PICKUP = 4,
     HARDMODE_PICKUP = 5,
     ALLSOULS_PICKUP = 6,
-)
 
-Entity = Struct(
-    "x_pos" / Int16ul,
-    "y_pos" / Int16ul,
-    "unique_id" / Int8ul,
-    "type" / EntityType,
-    "subtype" / Int8ul,
-    "instaload" / Int8ul,
-    "var_a" / Int16ul,
-    "var_b" / Int16ul,
-)
 
-Door = Struct(
-    "destination_room" / Int32ul,
-    "x_pos" / Int8ul,
-    "y_pos" / Int8ul,
-    "dest_x_offset" / Int16ul,
-    "dest_y_offset" / Int16ul,
-    "dest_x_pos" / Int16ul,
-    "dest_y_pos" / Int16ul,
-    "_padding" / Padding(2),
-)
+class Entity(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
 
-Room = Struct(
-    "lcd_control" / Int16ul,
-    "_const0" / Const(b'\xFF\xFF'),
-    "_padding" / Padding(4),
-    "_layer_list_offset" / Int32ul,
-    "_gfx_page_offset" / Int32ul,
-    "_palette_page_list" / Int32ul,
+        self.x_pos = self._stream.read_int(2)
+        self.y_pos = self._stream.read_int(2)
+        self.unique_id = self._stream.read_int()
+        self.type = EntityType(self._stream.read_int())
+        self.subtype = self._stream.read_int()
+        self.instaload = self._stream.read_int()
+        self.var_a = self._stream.read_int(2)
+        self.var_b = self._stream.read_int(2)
 
-    "entity_list" / AosPointer(
-        GreedyRange(
-            FocusedSeq(
-                "entity",
-                "peek" / Peek(Int32ul),
-                StopIf(this.peek == 0x7FFF7FFF),
-                "entity" / Entity,
-            ),
-        ),
-    ),
 
-    "door_list" / AosPointer(
-        GreedyRange(
-            FocusedSeq(
-                "door",
-                "peek" / Peek(Int32ul),
-                StopIf(this.peek >= 0xFFFF0000),
-                "door" / Door,
-            ),
-        ),
-    ),
+class Door(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
 
-    "unk0" / Int16ul,
-    "color_effects" / Int16ul,
-    "unk1" / Int32ul,
-)
+        self.destination_room = self._stream.read_int(4)
+        self.x_pos = self._stream.read_int()
+        self.y_pos = self._stream.read_int()
+        self.dest_x_offset = self._stream.read_int(2)
+        self.dest_y_offset = self._stream.read_int(2)
+        self.dest_x_pos = self._stream.read_int(2)
+        self.dest_y_pos = self._stream.read_int(2)
+        self._stream.seek(2, 1) # padding
+
+
+class Room(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        self.lcd_control = self._stream.read_int(2)
+        if self._stream.read_int(2) != 0xFFFF:
+            raise TypeError("Not a room")
+        self._stream.seek(4, 1) # padding
+        self.layer_list_offset = self._stream.read_offset()
+        self.gfx_page_offset = self._stream.read_offset()
+        self.palette_page_list = self._stream.read_offset()
+        self.entity_list = rom.read_terminated_array(Entity, self._stream.read_offset(), b'\x7F\xFF\x7F\xFF')
+
+        fallback = self._stream.tell()
+        self._stream.seek(self._stream.read_offset())
+        self.door_list = []
+        while self._stream.peek(8) < b'\xFF\xFF\x00\x00':
+            self.door_list.append(Door(self))
+        self._stream.seek(fallback)
+
+        self.unk0 = self._stream.read_int(2)
+        self.color_effects = self._stream.read_int(2)
+        self.unk1 = self._stream.read_int(4)

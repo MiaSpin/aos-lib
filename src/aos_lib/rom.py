@@ -1,11 +1,27 @@
 from pathlib import Path
 
 from aos_lib.stream import RomStream
+from aos_lib.structs.room import Entity
 
 
 class Rom:
     _stream: RomStream
+    _modified_entities: dict[int, Entity]
 
     def __init__(self, rom_path: Path) -> None:
         with rom_path.open("rb") as rom:
             self._stream = RomStream(rom.read())
+        self._modified_entities = {}
+
+    def read_terminated_array[T](self, element_type: type[T], offset: int, terminator: bytes) -> list[T]:
+        self._stream.seek(offset)
+        array = []
+        while self._stream.peek(len(terminator)) != terminator:
+            array.append(element_type(self))
+
+    def get_entity(self, offset: int) -> Entity:
+        if offset in self._modified_entities:
+            return self._modified_entities[offset]
+        entity = Entity(self, offset)
+        self._modified_entities[offset] = entity
+        return entity
