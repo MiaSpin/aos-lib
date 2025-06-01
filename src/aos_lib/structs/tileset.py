@@ -1,9 +1,17 @@
 
+from enum import Enum
+
 from aos_lib.stream import RomStream
+from aos_lib.structs.lzss import Lzss
 from aos_lib.structs.rom_object import RomObject
 
 
-class Tile(RomObject):
+class TilesetType(Enum):
+    UNCOMPRESSED = 1
+    COMPRESSED = 2
+
+
+class TilesetTile(RomObject):
     index: int
     page: int
     palette: int
@@ -22,10 +30,15 @@ class Tile(RomObject):
 
 
 class Tileset(RomObject):
-    def __init__(self, rom, stream: RomStream, offset = None):
+    def __init__(self, rom, offset = None, *, tileset_type: TilesetType):
         super().__init__(rom, offset)
 
-        tile_count = stream.getbuffer().nbytes // 2
-        self.tiles = []
-        for i in range(tile_count):
-            self.tiles.append(Tile(rom, stream))
+        if tileset_type is TilesetType.COMPRESSED:
+            uncompressed_stream = Lzss.decode(self._stream, None)
+            tile_count = uncompressed_stream.getbuffer().nbytes // 2
+            self.tiles = []
+            for i in range(tile_count):
+                self.tiles.append(TilesetTile(rom, uncompressed_stream))
+        else:
+            for i in range(4096):
+                self.tiles.append(TilesetTile(rom))

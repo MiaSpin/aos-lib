@@ -1,9 +1,8 @@
 from pathlib import Path
 
 from aos_lib.stream import RomStream
-from aos_lib.structs.lzss import Lzss
-from aos_lib.structs.room import Entity
-from aos_lib.structs.tileset import Tileset
+from aos_lib.structs.room import Entity, Room
+from aos_lib.structs.tileset import Tileset, TilesetType
 
 
 class Rom:
@@ -15,8 +14,8 @@ class Rom:
             self._stream = RomStream(rom.read())
 
         self._modified_entities = {}
-        self.modified_tilesets = {}
-
+        self._modified_rooms = {}
+        self._modified_tilesets = {}
 
     def get_entity(self, offset: int) -> Entity:
         if offset in self._modified_entities:
@@ -25,10 +24,18 @@ class Rom:
         self._modified_entities[offset] = entity
         return entity
 
-    def get_tileset(self, offset: int) -> Tileset:
-        if offset in self.modified_tilesets:
-            return self.modified_tilesets[offset]
+    def get_room(self, offset: int) -> Room:
+        if offset in self._modified_rooms:
+            return self._modified_rooms[offset]
 
-        tileset = Tileset(self, Lzss.decode(self._stream, offset))
-        self.modified_tilesets[offset] = tileset
+        room = Room(self, offset)
+        self._modified_rooms[offset] = room
+        return room
+
+    def get_tileset(self, tileset_type: TilesetType, offset: int) -> Tileset:
+        if offset in self._modified_tilesets:
+            return self._modified_tilesets[offset]
+
+        tileset = Tileset(self, offset, tileset_type=tileset_type)
+        self._modified_tilesets[offset] = tileset
         return tileset
