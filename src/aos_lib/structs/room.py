@@ -4,13 +4,13 @@ from aos_lib.structs.rom_object import RomObject
 
 
 class EntityType(Enum):
-    NOTHING = 0,
-    ENEMY = 1,
-    SPECIAL_OBJECT = 2,
-    CANDLE = 3,
-    PICKUP = 4,
-    HARDMODE_PICKUP = 5,
-    ALLSOULS_PICKUP = 6,
+    NOTHING = 0
+    ENEMY = 1
+    SPECIAL_OBJECT = 2
+    CANDLE = 3
+    PICKUP = 4
+    HARDMODE_PICKUP = 5
+    ALLSOULS_PICKUP = 6
 
 
 class Entity(RomObject):
@@ -52,10 +52,12 @@ class Room(RomObject):
         self.layer_list_offset = self._stream.read_offset()
         self.gfx_page_offset = self._stream.read_offset()
         self.palette_page_list = self._stream.read_offset()
-        self.entity_list = rom.read_terminated_array(Entity, self._stream.read_offset(), b'\x7F\xFF\x7F\xFF')
 
-        fallback = self._stream.tell()
-        self._stream.seek(self._stream.read_offset())
+        fallback, _ = self._stream.read_and_seek()
+        self.entity_list = self._stream.read_terminated_array(rom, Entity, terminator=b'\xFF\x7F\xFF\x7F')
+        self._stream.seek(fallback)
+
+        fallback, _ = self._stream.read_and_seek()
         self.door_list = []
         while self._stream.peek(8) < b'\xFF\xFF\x00\x00':
             self.door_list.append(Door(self))

@@ -17,11 +17,6 @@ class Rom:
         self._modified_entities = {}
         self.modified_tilesets = {}
 
-    def read_terminated_array[T](self, element_type: type[T], offset: int, terminator: bytes) -> list[T]:
-        self._stream.seek(offset)
-        array = []
-        while self._stream.peek(len(terminator)) != terminator:
-            array.append(element_type(self))
 
     def get_entity(self, offset: int) -> Entity:
         if offset in self._modified_entities:
