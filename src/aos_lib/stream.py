@@ -89,6 +89,19 @@ class RomStream(BytesIO):
             array.append(element_type(rom, **element_kwargs))
         return array
 
+    def read_pointer(self, func: callable, *args, **kwargs):
+        """Reads an offset, seeks to it, calls the given function,
+        then returns to the original position in the stream
+
+        param func: the function to call after seeking
+        *args: positional arguments to pass to the function
+        **kwargs: keyword arguments to pass to the function
+        returns: the return value of the function"""
+        fallback, _ = self.read_and_seek()
+        result = func(*args, **kwargs)
+        self.seek(fallback)
+        return result
+
     def read_and_seek(self) -> tuple[int, int]:
         """Reads an offset then seeks to it
 
