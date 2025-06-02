@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from aos_lib.structs.rom_object import RomObject
 
 if TYPE_CHECKING:
-    from aos_lib.rom import Rom
+    pass
 
 
 class RomStream(BytesIO):
@@ -27,13 +27,13 @@ class RomStream(BytesIO):
 
     def read_array[T: RomObject](
             self,
-            rom: Rom,
-            element_type: type[T],
+            element_call: callable,
             count: int,
+            *element_args,
             offset: int | None = None,
             **element_kwargs
         ) -> list[T]:
-        """Reads an array of type T with the given length
+        """Reads an array of a given size, calling a callalable to create each element
 
         param rom: the ROM object the elements belong to
         param count: the length of the array
@@ -44,18 +44,18 @@ class RomStream(BytesIO):
 
         array = []
         for i in range(count):
-            array.append(element_type(rom, **element_kwargs))
+            array.append(element_call(*element_args, **element_kwargs))
         return array
 
     def read_prefixed_array[T: RomObject](
             self,
-            rom: Rom,
-            element_type: type[T],
+            element_call: callable,
             length_size: int,
+            *element_args,
             offset: int | None = None,
             **element_kwargs
         ) -> list[T]:
-        """Reads an integer of given size, then reads an array of type T of that size
+        """Reads an integer of given size, then reads an array of that size using a callable
 
         param rom: the ROM object the elements belong to
         param length_size: the number of bytes to read the array length from
@@ -64,20 +64,21 @@ class RomStream(BytesIO):
         if offset is not None:
             self.seek(offset)
 
-        length_size = self.read_int(length_size)
-        return self.read_array(rom, element_type, length_size, None, **element_kwargs)
+        count = self.read_int(length_size)
+        return self.read_array(element_call, count, *element_args, **element_kwargs)
 
     def read_terminated_array[T](
             self,
-            rom: Rom,
-            element_type: type[T],
+            element_call: callable,
+            *element_args,
             terminator: bytes = b'\x00',
             offset: int | None = None,
             **element_kwargs
         ) -> list[T]:
-        """Reads an array of type T until a terminating value is reached
+        """Reads an array, calling a callalable to create
+        each element until a terminating value is reached
 
-        param rom: the ROM object the elements belong to
+        param element_call: the callable used for each element
         param terminator: the value at the end of the array
         param offset: if provided, seek here before reading the array
         **element_kwargs: arguments to pass to the constructor of elements"""
@@ -86,19 +87,19 @@ class RomStream(BytesIO):
 
         array = []
         while self.peek(len(terminator)) != terminator:
-            array.append(element_type(rom, **element_kwargs))
+            array.append(element_call(*element_args, **element_kwargs))
         return array
 
-    def read_pointer(self, func: callable, *args, **kwargs):
+    def read_pointer(self, call: callable, *args, **kwargs):
         """Reads an offset, seeks to it, calls the given function,
         then returns to the original position in the stream
 
-        param func: the function to call after seeking
+        param call: the function to call after seeking
         *args: positional arguments to pass to the function
         **kwargs: keyword arguments to pass to the function
         returns: the return value of the function"""
         fallback, _ = self.read_and_seek()
-        result = func(*args, **kwargs)
+        result = call(*args, **kwargs)
         self.seek(fallback)
         return result
 

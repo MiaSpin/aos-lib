@@ -141,9 +141,12 @@ class Room(RomObject):
 
         self.palette_page_list = self._stream.read_offset()
 
-        fallback, _ = self._stream.read_and_seek()
-        self.entity_list = self._stream.read_terminated_array(rom, Entity, terminator=b'\xFF\x7F\xFF\x7F')
-        self._stream.seek(fallback)
+        self.entity_list = self._stream.read_pointer(
+            self._stream.read_terminated_array,
+            rom,
+            Entity,
+            terminator=b'\xFF\x7F\xFF\x7F',
+        )
 
         fallback, _ = self._stream.read_and_seek()
         self.door_list = []
