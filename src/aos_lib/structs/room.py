@@ -32,9 +32,8 @@ class RoomLayer(RomObject):
         self.height2 = self._stream.read_int()
 
         self.tileset_type = TilesetType(self._stream.read_int(2))
-        tileset_fallback, tileset_offset = self._stream.read_and_seek()
-        self.tileset = rom.get_tileset(self.tileset_type, tileset_offset)
-        self._stream.seek(tileset_fallback)
+        tileset_offset = self._stream.read_offset()
+        self.tileset = self._stream.read_pointer(rom.get_tileset, self.tileset_type, tileset_offset)
 
         self.collision_offset = self._stream.read_offset()
 
@@ -58,9 +57,7 @@ class Graphics(RomObject):
         self.size = self._stream.read_int()
 
         if is_compressed:
-            fallback, _ = self._stream.read_and_seek()
-            data = Lzss.decode(self._stream).getvalue()
-            self._stream.seek(fallback)
+            data = self._stream.read_pointer(lambda: Lzss.decode(self._stream).getvalue())
 
         self.pixels = []
         if self.bpp == 4:
@@ -75,9 +72,7 @@ class RoomGraphics(RomObject):
     def __init__(self, rom, offset = None):
         super().__init__(rom, offset)
 
-        fallback, _ = self._stream.read_and_seek()
-        self.graphics = Graphics(rom)
-        self._stream.seek(fallback)
+        self.graphics = self._stream.read_pointer(Graphics, rom)
         self.load_offset = self._stream.read_int()
         self.first_index = self._stream.read_int()
         self.count = self._stream.read_int()
@@ -131,13 +126,8 @@ class Room(RomObject):
             raise TypeError("Not a room")
         self._stream.seek(4, 1) # padding
 
-        fallback, _ = self._stream.read_and_seek()
-        self.layer_list = self._stream.read_array(rom, RoomLayer, 3)
-        self._stream.seek(fallback)
-
-        fallback, _ = self._stream.read_and_seek()
-        self.graphics_pages = self._stream.read_terminated_array(rom, RoomGraphics)
-        self._stream.seek(fallback)
+        self.layer_list = self._stream.read_pointer(self._stream.read_array, rom, RoomLayer, 3)
+        self.graphics_pages = self._stream.read_pointer(self._stream.read_terminated_array, rom, RoomGraphics)
 
         self.palette_page_list = self._stream.read_offset()
 
