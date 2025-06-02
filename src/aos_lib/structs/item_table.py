@@ -38,18 +38,18 @@ class WeaponModifiers(RomObject):
         super().__init__(rom, offset)
 
         modifiers = self._stream.read_int(2)
-        self.slash          = modifiers & 0b00000000_00000001
-        self.flame          = modifiers & 0b00000000_00000010
-        self.water          = modifiers & 0b00000000_00000100
-        self.thunder        = modifiers & 0b00000000_00001000
-        self.dark           = modifiers & 0b00000000_00010000
-        self.holy           = modifiers & 0b00000000_00100000
-        self.poison         = modifiers & 0b00000000_01000000
-        self.curse          = modifiers & 0b00000000_10000000
-        self.stone          = modifiers & 0b00000001_00000000
-        self.swap_hp_mp     = modifiers & 0b00001000_00000000
-        self.half_damage    = modifiers & 0b00010000_00000000
-        self.no_land_cancel = modifiers & 0b00100000_00000000
+        self.slash          = modifiers & 0b00000000_00000001 > 0
+        self.flame          = modifiers & 0b00000000_00000010 > 0
+        self.water          = modifiers & 0b00000000_00000100 > 0
+        self.thunder        = modifiers & 0b00000000_00001000 > 0
+        self.dark           = modifiers & 0b00000000_00010000 > 0
+        self.holy           = modifiers & 0b00000000_00100000 > 0
+        self.poison         = modifiers & 0b00000000_01000000 > 0
+        self.curse          = modifiers & 0b00000000_10000000 > 0
+        self.stone          = modifiers & 0b00000001_00000000 > 0
+        self.swap_hp_mp     = modifiers & 0b00001000_00000000 > 0
+        self.half_damage    = modifiers & 0b00010000_00000000 > 0
+        self.no_land_cancel = modifiers & 0b00100000_00000000 > 0
 
 
 class Weapon(RomObject):
@@ -88,15 +88,15 @@ class ArmorResistances(RomObject):
         super().__init__(rom, offset)
 
         resist = self._stream.read_int(2)
-        self.slash   = resist & 0b00000000_00000001
-        self.flame   = resist & 0b00000000_00000010
-        self.water   = resist & 0b00000000_00000100
-        self.thunder = resist & 0b00000000_00001000
-        self.dark    = resist & 0b00000000_00010000
-        self.holy    = resist & 0b00000000_00100000
-        self.poison  = resist & 0b00000000_01000000
-        self.curse   = resist & 0b00000000_10000000
-        self.stone   = resist & 0b00000001_00000000
+        self.slash   = resist & 0b00000000_00000001 > 0
+        self.flame   = resist & 0b00000000_00000010 > 0
+        self.water   = resist & 0b00000000_00000100 > 0
+        self.thunder = resist & 0b00000000_00001000 > 0
+        self.dark    = resist & 0b00000000_00010000 > 0
+        self.holy    = resist & 0b00000000_00100000 > 0
+        self.poison  = resist & 0b00000000_01000000 > 0
+        self.curse   = resist & 0b00000000_10000000 > 0
+        self.stone   = resist & 0b00000001_00000000 > 0
 
 
 class Armor(RomObject):
@@ -131,16 +131,16 @@ class RedSoulDamageType(RomObject):
         super().__init__(rom, offset)
 
         modifiers = self._stream.read_int(2)
-        self.slash          = modifiers & 0b00000000_00000001
-        self.flame          = modifiers & 0b00000000_00000010
-        self.water          = modifiers & 0b00000000_00000100
-        self.thunder        = modifiers & 0b00000000_00001000
-        self.dark           = modifiers & 0b00000000_00010000
-        self.holy           = modifiers & 0b00000000_00100000
-        self.poison         = modifiers & 0b00000000_01000000
-        self.curse          = modifiers & 0b00000000_10000000
-        self.stone          = modifiers & 0b00000001_00000000
-        self.swap_hp_mp     = modifiers & 0b00001000_00000000
+        self.slash          = modifiers & 0b00000000_00000001 > 0
+        self.flame          = modifiers & 0b00000000_00000010 > 0
+        self.water          = modifiers & 0b00000000_00000100 > 0
+        self.thunder        = modifiers & 0b00000000_00001000 > 0
+        self.dark           = modifiers & 0b00000000_00010000 > 0
+        self.holy           = modifiers & 0b00000000_00100000 > 0
+        self.poison         = modifiers & 0b00000000_01000000 > 0
+        self.curse          = modifiers & 0b00000000_10000000 > 0
+        self.stone          = modifiers & 0b00000001_00000000 > 0
+        self.swap_hp_mp     = modifiers & 0b00001000_00000000 > 0
 
 
 class RedSoul(RomObject):
