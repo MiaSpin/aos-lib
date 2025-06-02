@@ -1,125 +1,190 @@
-from construct.core import (
-    Array,
-    BitsSwapped,
-    BitStruct,
-    Const,
-    Enum,
-    Flag,
-    Int8sl,
-    Int8ul,
-    Int16ul,
-    Int32ul,
-    Padding,
-    Struct,
-)
+from enum import Enum
 
-ConsumableType = Enum(
-    Int8ul,
-    RESTORE_HP = 0,
-    RESTORE_MP = 1,
-    CURE_STATUS = 2,
-    LOSE_HP = 3,
-    UNUSABLE = 4,
-)
+from aos_lib.structs.rom_object import RomObject
 
-Consumable = Struct(
-    item_id=Int16ul,
-    icon=Int16ul,
-    price=Int32ul,
-    type=ConsumableType,
-    unk0=Int8ul,
-    var_a=Int16ul,
-    _const0=Const(0, Int32ul),
-)
 
-WeaponAttackType = Enum(
-    Int8ul,
-    SLASH = 0,
-    OVERHEAD = 1,
-    SPEAR = 2,
-    FIST = 3,
-    GUN = 4,
-    VALMANWAY = 5,
-)
+class ConsumableType(Enum):
+    RESTORE_HP = 0
+    RESTORE_MP = 1
+    CURE_STATUS = 2
+    LOSE_HP = 3
+    UNUSABLE = 4
 
-WeaponModifiers = BitsSwapped(BitStruct(
-    slash=Flag,
-    flame=Flag,
-    water=Flag,
-    thunder=Flag,
-    dark=Flag,
-    holy=Flag,
-    poison=Flag,
-    curse=Flag,
-    stone=Flag,
-    _padding0=Padding(2),
-    swap_hp_mp=Flag,
-    half_damage=Flag,
-    no_land_cancel=Flag,
-    _padding1=Padding(2),
-))
 
-Weapon = Struct(
-    item_id=Int16ul,
-    icon=Int16ul,
-    price=Int32ul,
-    type=WeaponAttackType,
-    unk0=Int8ul,
-    attack=Int8ul,
-    defense=Int8ul,
-    strength=Int8sl,
-    constitution=Int8sl,
-    intelligence=Int8sl,
-    luck=Int8sl,
-    modifiers=WeaponModifiers,
-    gfx_index=Int8ul,
-    sprite_index=Int8ul,
-    unk1=Int8ul,
-    palette=Int8ul,
-    animation=Int8ul,
-    iframes=Int8ul,
-    sound=Int16ul,
-    unk2=Int16ul,
-)
+class Consumable(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
 
-ArmorType = Enum(
-    Int8ul,
-    ARMOR = 0,
-    ACCESSORY = 1,
-)
+        self.item_id = self._stream.read_int(2)
+        self.icon = self._stream.read_int(2)
+        self.price = self._stream.read_int(4)
+        self.type = ConsumableType(self._stream.read_int())
+        self.unk0 = self._stream.read_int()
+        self.var_a = self._stream.read_int(2)
+        self._const0 = self._stream.read_int(4)
 
-ArmorResistances = BitsSwapped(BitStruct(
-    slash=Flag,
-    flame=Flag,
-    water=Flag,
-    thunder=Flag,
-    dark=Flag,
-    holy=Flag,
-    poison=Flag,
-    curse=Flag,
-    stone=Flag,
-    _padding=Padding(7),
-))
 
-Armor = Struct(
-    item_id=Int16ul,
-    icon=Int16ul,
-    price=Int32ul,
-    type=ArmorType,
-    unk0=Int8ul,
-    attack=Int8ul,
-    defense=Int8ul,
-    strength=Int8sl,
-    constitution=Int8sl,
-    intelligence=Int8sl,
-    luck=Int8sl,
-    resistances=ArmorResistances,
-    unk1=Int8ul,
-    unk2=Int8ul,
-)
+class WeaponAttackType(Enum):
+    SLASH = 0
+    OVERHEAD = 1
+    SPEAR = 2
+    FIST = 3
+    GUN = 4
+    VALMANWAY = 5
 
-ItemTable = Struct(
-    consumables=Array(0x20, Consumable),
-    weapons=Array(0x3B, Weapon),
-    armor=Array(0x2D, Armor),
-)
+
+class WeaponModifiers(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        modifiers = self._stream.read_int(2)
+        self.slash          = modifiers & 0b00000000_00000001
+        self.flame          = modifiers & 0b00000000_00000010
+        self.water          = modifiers & 0b00000000_00000100
+        self.thunder        = modifiers & 0b00000000_00001000
+        self.dark           = modifiers & 0b00000000_00010000
+        self.holy           = modifiers & 0b00000000_00100000
+        self.poison         = modifiers & 0b00000000_01000000
+        self.curse          = modifiers & 0b00000000_10000000
+        self.stone          = modifiers & 0b00000001_00000000
+        self.swap_hp_mp     = modifiers & 0b00001000_00000000
+        self.half_damage    = modifiers & 0b00010000_00000000
+        self.no_land_cancel = modifiers & 0b00100000_00000000
+
+
+class Weapon(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        self.item_id = self._stream.read_int(2)
+        self.icon = self._stream.read_int(2)
+        self.price = self._stream.read_int(4)
+        self.type = WeaponAttackType(self._stream.read_int())
+        self.unk0 = self._stream.read_int()
+        self.attack = self._stream.read_int()
+        self.defense = self._stream.read_int()
+        self.strength = self._stream.read_int()
+        self.constitution = self._stream.read_int()
+        self.intelligence = self._stream.read_int()
+        self.luck = self._stream.read_int()
+        self.modifiers = WeaponModifiers(self._stream.read_int(2))
+        self.gfx_index = self._stream.read_int()
+        self.sprite_index = self._stream.read_int()
+        self.unk1 = self._stream.read_int()
+        self.palette = self._stream.read_int()
+        self.animation = self._stream.read_int()
+        self.iframes = self._stream.read_int()
+        self.sound = self._stream.read_int(2)
+        self.unk2 = self._stream.read_int(2)
+
+
+class ArmorType(Enum):
+    ARMOR = 0
+    ACCESSORY = 1
+
+
+class ArmorResistances(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        resist = self._stream.read_int(2)
+        self.slash   = resist & 0b00000000_00000001
+        self.flame   = resist & 0b00000000_00000010
+        self.water   = resist & 0b00000000_00000100
+        self.thunder = resist & 0b00000000_00001000
+        self.dark    = resist & 0b00000000_00010000
+        self.holy    = resist & 0b00000000_00100000
+        self.poison  = resist & 0b00000000_01000000
+        self.curse   = resist & 0b00000000_10000000
+        self.stone   = resist & 0b00000001_00000000
+
+
+class Armor(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        self.item_id = self._stream.read_int(2)
+        self.icon = self._stream.read_int(2)
+        self.price = self._stream.read_int(4)
+        self.type = ArmorType(self._stream.read_int())
+        self.unk0 = self._stream.read_int()
+        self.attack = self._stream.read_int()
+        self.defense = self._stream.read_int()
+        self.strength = self._stream.read_int()
+        self.constitution = self._stream.read_int()
+        self.intelligence = self._stream.read_int()
+        self.luck = self._stream.read_int()
+        self.resistances = ArmorResistances(self._stream.read_int(2))
+        self.unk1 = self._stream.read_int()
+        self.unk2 = self._stream.read_int()
+
+
+class RedSoulAnimation(Enum):
+    STANDARD = 0
+    UPPERCUT = 1
+    STRAIGHT_PUNCH = 2
+    POWERFUL_PUNCH = 3
+
+
+class RedSoulDamageType(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        modifiers = self._stream.read_int(2)
+        self.slash          = modifiers & 0b00000000_00000001
+        self.flame          = modifiers & 0b00000000_00000010
+        self.water          = modifiers & 0b00000000_00000100
+        self.thunder        = modifiers & 0b00000000_00001000
+        self.dark           = modifiers & 0b00000000_00010000
+        self.holy           = modifiers & 0b00000000_00100000
+        self.poison         = modifiers & 0b00000000_01000000
+        self.curse          = modifiers & 0b00000000_10000000
+        self.stone          = modifiers & 0b00000001_00000000
+        self.swap_hp_mp     = modifiers & 0b00001000_00000000
+
+
+class RedSoul(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        self.code_pointer = self._stream.read_offset()
+        self.animation = RedSoulAnimation(self._stream.read_int(2))
+        self.mana_cost = self._stream.read_int(2)
+        self.max_projectiles = self._stream.read_int()
+        self.unk0 = self._stream.read_int()
+        self.damage_multiplier = self._stream.read_int(2)
+        self.damage_type = RedSoulDamageType(self._stream.read_int(2))
+        self.var_pointer = self._stream.read_int(2) # varies based on self.code_pointer
+
+
+class BlueSoulControlType(Enum):
+    HOLD = 1
+    TOGGLE = 2
+
+
+class BlueSoul(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        self.code_pointer = self._stream.read_offset()
+        self.mana_cost = self._stream.read_int()
+        self.control_type = BlueSoulControlType(self._stream.read_int())
+        self.unk0 = self._stream.read_int(2)
+        self.var = self._stream.read_int(4) # varies based on soul
+
+
+class YellowSoulStat(Enum):
+    STRENGTH = 0
+    CONSTITUTION = 0
+    INTELLIGENCE = 0
+    LUCK = 0
+
+
+class YellowSoul(RomObject):
+    def __init__(self, rom, offset = None):
+        super().__init__(rom, offset)
+
+        self.code_pointer = self._stream.read_offset()
+        self.unk0 = self._stream.read_int(2)
+        self.raise_stat = YellowSoulStat(self._stream.read_int())
+        self.var = self._stream.read_int(4) # varies based on soul
