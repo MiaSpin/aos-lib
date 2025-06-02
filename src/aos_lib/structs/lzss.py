@@ -20,7 +20,7 @@ class Lzss:
             current_bit = 0x80
             while current_bit > 0:
                 if block_header & current_bit:
-                    encoded_data = stream.read_int(2)
+                    encoded_data = int.from_bytes(stream.read(2), 'big')
                     distance = encoded_data & 0xFFF
                     length = (encoded_data >> 12) + 3
                     data += data[-distance - 1:-distance] * length
